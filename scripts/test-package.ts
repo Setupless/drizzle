@@ -58,9 +58,28 @@ if (typeof sqliteTableDefinition.id.defaultFn?.() !== "string") throw new Error(
 `;
   writeFileSync(join(temporaryDirectory, "smoke.mjs"), smokeTest);
   writeFileSync(join(temporaryDirectory, "smoke.ts"), smokeTest);
+  writeFileSync(
+    join(temporaryDirectory, "smoke.cjs"),
+    `const { pgTable } = require("drizzle-orm/pg-core");
+const { sqliteTable } = require("drizzle-orm/sqlite-core");
+const { pg, sqlite } = require("@setupless/drizzle");
+const { id: pgId } = require("@setupless/drizzle/pg");
+const { id: sqliteId } = require("@setupless/drizzle/sqlite");
+
+const pgTableDefinition = pgTable("users", { ...pgId() });
+const sqliteTableDefinition = sqliteTable("users", { ...sqliteId("uuid") });
+
+if (pg.id !== pgId || sqlite.id !== sqliteId) throw new Error("Root exports do not match subpath exports");
+if (pgTableDefinition.id.getSQLType() !== "integer") throw new Error("PostgreSQL helper failed");
+if (sqliteTableDefinition.id.getSQLType() !== "text") throw new Error("SQLite helper failed");
+if (typeof sqliteTableDefinition.id.defaultFn?.() !== "string") throw new Error("SQLite UUID default failed");
+`,
+  );
 
   run("node", ["smoke.mjs"], temporaryDirectory);
+  run("node", ["smoke.cjs"], temporaryDirectory);
   run("bun", ["smoke.mjs"], temporaryDirectory);
+  run("bun", ["smoke.cjs"], temporaryDirectory);
   run(
     "npx",
     [
