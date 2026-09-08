@@ -1,0 +1,68 @@
+{
+  "name": "@setupless/drizzle",
+  "version": "0.1.0",
+  "description": "Small, typed helpers for defining Drizzle ORM schemas",
+  "homepage": "https://github.com/Setupless/drizzle#readme",
+  "bugs": {
+    "url": "https://github.com/Setupless/drizzle/issues"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Setupless/drizzle.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./pg": {
+      "types": "./dist/pg/index.d.ts",
+      "import": "./dist/pg/index.js"
+    },
+    "./sqlite": {
+      "types": "./dist/sqlite/index.d.ts",
+      "import": "./dist/sqlite/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun scripts/build.ts",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun test && bun run build",
+    "fix": "bun run lint:fix && bun run format",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint --deny-warnings",
+    "lint:fix": "oxlint --fix",
+    "prepack": "bun run check",
+    "prepublishOnly": "bun run test:package",
+    "test": "bun test",
+    "test:package": "bun scripts/test-package.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2",
+    "drizzle-orm": "^0.45.2",
+    "oxfmt": "0.67.0",
+    "oxlint": "1.82.0",
+    "oxlint-tsgolint": "7.0.2001",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "drizzle-orm": ">=0.38.0 <0.46.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "bun@1.4.0"
+}
