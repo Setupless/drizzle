@@ -1,6 +1,6 @@
 {
   "name": "@setupless/drizzle",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Small, typed helpers for defining Drizzle ORM schemas",
   "homepage": "https://github.com/Setupless/drizzle#readme",
   "bugs": {
@@ -48,6 +48,16 @@
       "require": {
         "types": "./dist/cjs/sqlite/index.d.ts",
         "default": "./dist/cjs/sqlite/index.js"
+      }
+    },
+    "./mysql": {
+      "import": {
+        "types": "./dist/mysql/index.d.ts",
+        "default": "./dist/mysql/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/mysql/index.d.ts",
+        "default": "./dist/cjs/mysql/index.js"
       }
     }
   },

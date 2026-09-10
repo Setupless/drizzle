@@ -44,7 +44,9 @@ try {
   );
   const smokeTest = `import { pgTable } from "drizzle-orm/pg-core";
 import { sqliteTable } from "drizzle-orm/sqlite-core";
-import { pg, sqlite } from "@setupless/drizzle";
+import { mysqlTable } from "drizzle-orm/mysql-core";
+import { createdAt as mysqlCreatedAt, deletedAt as mysqlDeletedAt, id as mysqlId, timestamps as mysqlTimestamps, updatedAt as mysqlUpdatedAt } from "@setupless/drizzle/mysql";
+import { pg, sqlite, mysql } from "@setupless/drizzle";
 import { createdAt as pgCreatedAt, deletedAt as pgDeletedAt, id as pgId, timestamps as pgTimestamps, updatedAt as pgUpdatedAt } from "@setupless/drizzle/pg";
 import { createdAt as sqliteCreatedAt, deletedAt as sqliteDeletedAt, id as sqliteId, timestamps as sqliteTimestamps, updatedAt as sqliteUpdatedAt } from "@setupless/drizzle/sqlite";
 
@@ -62,6 +64,15 @@ if (sqliteTableDefinition.createdAt.getSQLType() !== "text") throw new Error("SQ
 if (sqliteTableDefinition.updatedAt.getSQLType() !== "text") throw new Error("SQLite updatedAt helper failed");
 if (sqliteTableDefinition.deletedAt.getSQLType() !== "text" || sqliteTableDefinition.deletedAt.notNull || sqliteTableDefinition.deletedAt.hasDefault) throw new Error("sqlite deletedAt helper failed");
 if (typeof sqliteTableDefinition.id.defaultFn?.() !== "string") throw new Error("SQLite UUID default failed");
+
+const mysqlTableDefinition = mysqlTable("users", { ...mysqlId(), ...mysqlTimestamps(), ...mysqlDeletedAt() });
+const mysqlUuidTable = mysqlTable("uuid_users", { ...mysqlId("uuid") });
+if (mysql.deletedAt !== mysqlDeletedAt || mysql.id !== mysqlId || mysql.createdAt !== mysqlCreatedAt || mysql.timestamps !== mysqlTimestamps || mysql.updatedAt !== mysqlUpdatedAt) throw new Error("MySQL root exports do not match subpath exports");
+if (mysqlTableDefinition.id.getSQLType() !== "int") throw new Error("MySQL id helper failed");
+if (mysqlTableDefinition.createdAt.getSQLType() !== "datetime(3)" || mysqlTableDefinition.updatedAt.getSQLType() !== "datetime(3)") throw new Error("MySQL timestamps helper failed");
+if (mysqlTableDefinition.deletedAt.getSQLType() !== "datetime(3)" || mysqlTableDefinition.deletedAt.notNull || mysqlTableDefinition.deletedAt.hasDefault) throw new Error("MySQL deletedAt helper failed");
+if (mysqlUuidTable.id.getSQLType() !== "char(36)" || typeof mysqlUuidTable.id.defaultFn?.() !== "string") throw new Error("MySQL UUID helper failed");
+
 `;
   writeFileSync(join(temporaryDirectory, "smoke.mjs"), smokeTest);
   writeFileSync(join(temporaryDirectory, "smoke.ts"), smokeTest);
@@ -69,7 +80,9 @@ if (typeof sqliteTableDefinition.id.defaultFn?.() !== "string") throw new Error(
     join(temporaryDirectory, "smoke.cjs"),
     `const { pgTable } = require("drizzle-orm/pg-core");
 const { sqliteTable } = require("drizzle-orm/sqlite-core");
-const { pg, sqlite } = require("@setupless/drizzle");
+const { mysqlTable } = require("drizzle-orm/mysql-core");
+const { createdAt: mysqlCreatedAt, deletedAt: mysqlDeletedAt, id: mysqlId, timestamps: mysqlTimestamps, updatedAt: mysqlUpdatedAt } = require("@setupless/drizzle/mysql");
+const { pg, sqlite, mysql } = require("@setupless/drizzle");
 const { createdAt: pgCreatedAt, deletedAt: pgDeletedAt, id: pgId, timestamps: pgTimestamps, updatedAt: pgUpdatedAt } = require("@setupless/drizzle/pg");
 const { createdAt: sqliteCreatedAt, deletedAt: sqliteDeletedAt, id: sqliteId, timestamps: sqliteTimestamps, updatedAt: sqliteUpdatedAt } = require("@setupless/drizzle/sqlite");
 
@@ -87,6 +100,15 @@ if (sqliteTableDefinition.createdAt.getSQLType() !== "text") throw new Error("SQ
 if (sqliteTableDefinition.updatedAt.getSQLType() !== "text") throw new Error("SQLite updatedAt helper failed");
 if (sqliteTableDefinition.deletedAt.getSQLType() !== "text" || sqliteTableDefinition.deletedAt.notNull || sqliteTableDefinition.deletedAt.hasDefault) throw new Error("sqlite deletedAt helper failed");
 if (typeof sqliteTableDefinition.id.defaultFn?.() !== "string") throw new Error("SQLite UUID default failed");
+
+const mysqlTableDefinition = mysqlTable("users", { ...mysqlId(), ...mysqlTimestamps(), ...mysqlDeletedAt() });
+const mysqlUuidTable = mysqlTable("uuid_users", { ...mysqlId("uuid") });
+if (mysql.deletedAt !== mysqlDeletedAt || mysql.id !== mysqlId || mysql.createdAt !== mysqlCreatedAt || mysql.timestamps !== mysqlTimestamps || mysql.updatedAt !== mysqlUpdatedAt) throw new Error("MySQL root exports do not match subpath exports");
+if (mysqlTableDefinition.id.getSQLType() !== "int") throw new Error("MySQL id helper failed");
+if (mysqlTableDefinition.createdAt.getSQLType() !== "datetime(3)" || mysqlTableDefinition.updatedAt.getSQLType() !== "datetime(3)") throw new Error("MySQL timestamps helper failed");
+if (mysqlTableDefinition.deletedAt.getSQLType() !== "datetime(3)" || mysqlTableDefinition.deletedAt.notNull || mysqlTableDefinition.deletedAt.hasDefault) throw new Error("MySQL deletedAt helper failed");
+if (mysqlUuidTable.id.getSQLType() !== "char(36)" || typeof mysqlUuidTable.id.defaultFn?.() !== "string") throw new Error("MySQL UUID helper failed");
+
 `,
   );
 
