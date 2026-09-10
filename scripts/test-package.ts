@@ -45,20 +45,22 @@ try {
   const smokeTest = `import { pgTable } from "drizzle-orm/pg-core";
 import { sqliteTable } from "drizzle-orm/sqlite-core";
 import { pg, sqlite } from "@setupless/drizzle";
-import { createdAt as pgCreatedAt, id as pgId, timestamps as pgTimestamps, updatedAt as pgUpdatedAt } from "@setupless/drizzle/pg";
-import { createdAt as sqliteCreatedAt, id as sqliteId, timestamps as sqliteTimestamps, updatedAt as sqliteUpdatedAt } from "@setupless/drizzle/sqlite";
+import { createdAt as pgCreatedAt, deletedAt as pgDeletedAt, id as pgId, timestamps as pgTimestamps, updatedAt as pgUpdatedAt } from "@setupless/drizzle/pg";
+import { createdAt as sqliteCreatedAt, deletedAt as sqliteDeletedAt, id as sqliteId, timestamps as sqliteTimestamps, updatedAt as sqliteUpdatedAt } from "@setupless/drizzle/sqlite";
 
-const pgTableDefinition = pgTable("users", { ...pgId(), ...pgTimestamps() });
-const sqliteTableDefinition = sqliteTable("users", { ...sqliteId("uuid"), ...sqliteTimestamps() });
+const pgTableDefinition = pgTable("users", { ...pgId(), ...pgTimestamps(), ...pgDeletedAt() });
+const sqliteTableDefinition = sqliteTable("users", { ...sqliteId("uuid"), ...sqliteTimestamps(), ...sqliteDeletedAt() });
 
-if (pg.id !== pgId || pg.createdAt !== pgCreatedAt || pg.timestamps !== pgTimestamps || pg.updatedAt !== pgUpdatedAt) throw new Error("PostgreSQL root exports do not match subpath exports");
-if (sqlite.id !== sqliteId || sqlite.createdAt !== sqliteCreatedAt || sqlite.timestamps !== sqliteTimestamps || sqlite.updatedAt !== sqliteUpdatedAt) throw new Error("SQLite root exports do not match subpath exports");
+if (pg.deletedAt !== pgDeletedAt || pg.id !== pgId || pg.createdAt !== pgCreatedAt || pg.timestamps !== pgTimestamps || pg.updatedAt !== pgUpdatedAt) throw new Error("PostgreSQL root exports do not match subpath exports");
+if (sqlite.deletedAt !== sqliteDeletedAt || sqlite.id !== sqliteId || sqlite.createdAt !== sqliteCreatedAt || sqlite.timestamps !== sqliteTimestamps || sqlite.updatedAt !== sqliteUpdatedAt) throw new Error("SQLite root exports do not match subpath exports");
 if (pgTableDefinition.id.getSQLType() !== "integer") throw new Error("PostgreSQL helper failed");
 if (pgTableDefinition.createdAt.getSQLType() !== "timestamp") throw new Error("PostgreSQL createdAt helper failed");
 if (pgTableDefinition.updatedAt.getSQLType() !== "timestamp") throw new Error("PostgreSQL updatedAt helper failed");
+if (pgTableDefinition.deletedAt.getSQLType() !== "timestamp" || pgTableDefinition.deletedAt.notNull || pgTableDefinition.deletedAt.hasDefault) throw new Error("pg deletedAt helper failed");
 if (sqliteTableDefinition.id.getSQLType() !== "text") throw new Error("SQLite helper failed");
 if (sqliteTableDefinition.createdAt.getSQLType() !== "text") throw new Error("SQLite createdAt helper failed");
 if (sqliteTableDefinition.updatedAt.getSQLType() !== "text") throw new Error("SQLite updatedAt helper failed");
+if (sqliteTableDefinition.deletedAt.getSQLType() !== "text" || sqliteTableDefinition.deletedAt.notNull || sqliteTableDefinition.deletedAt.hasDefault) throw new Error("sqlite deletedAt helper failed");
 if (typeof sqliteTableDefinition.id.defaultFn?.() !== "string") throw new Error("SQLite UUID default failed");
 `;
   writeFileSync(join(temporaryDirectory, "smoke.mjs"), smokeTest);
@@ -68,20 +70,22 @@ if (typeof sqliteTableDefinition.id.defaultFn?.() !== "string") throw new Error(
     `const { pgTable } = require("drizzle-orm/pg-core");
 const { sqliteTable } = require("drizzle-orm/sqlite-core");
 const { pg, sqlite } = require("@setupless/drizzle");
-const { createdAt: pgCreatedAt, id: pgId, timestamps: pgTimestamps, updatedAt: pgUpdatedAt } = require("@setupless/drizzle/pg");
-const { createdAt: sqliteCreatedAt, id: sqliteId, timestamps: sqliteTimestamps, updatedAt: sqliteUpdatedAt } = require("@setupless/drizzle/sqlite");
+const { createdAt: pgCreatedAt, deletedAt: pgDeletedAt, id: pgId, timestamps: pgTimestamps, updatedAt: pgUpdatedAt } = require("@setupless/drizzle/pg");
+const { createdAt: sqliteCreatedAt, deletedAt: sqliteDeletedAt, id: sqliteId, timestamps: sqliteTimestamps, updatedAt: sqliteUpdatedAt } = require("@setupless/drizzle/sqlite");
 
-const pgTableDefinition = pgTable("users", { ...pgId(), ...pgTimestamps() });
-const sqliteTableDefinition = sqliteTable("users", { ...sqliteId("uuid"), ...sqliteTimestamps() });
+const pgTableDefinition = pgTable("users", { ...pgId(), ...pgTimestamps(), ...pgDeletedAt() });
+const sqliteTableDefinition = sqliteTable("users", { ...sqliteId("uuid"), ...sqliteTimestamps(), ...sqliteDeletedAt() });
 
-if (pg.id !== pgId || pg.createdAt !== pgCreatedAt || pg.timestamps !== pgTimestamps || pg.updatedAt !== pgUpdatedAt) throw new Error("PostgreSQL root exports do not match subpath exports");
-if (sqlite.id !== sqliteId || sqlite.createdAt !== sqliteCreatedAt || sqlite.timestamps !== sqliteTimestamps || sqlite.updatedAt !== sqliteUpdatedAt) throw new Error("SQLite root exports do not match subpath exports");
+if (pg.deletedAt !== pgDeletedAt || pg.id !== pgId || pg.createdAt !== pgCreatedAt || pg.timestamps !== pgTimestamps || pg.updatedAt !== pgUpdatedAt) throw new Error("PostgreSQL root exports do not match subpath exports");
+if (sqlite.deletedAt !== sqliteDeletedAt || sqlite.id !== sqliteId || sqlite.createdAt !== sqliteCreatedAt || sqlite.timestamps !== sqliteTimestamps || sqlite.updatedAt !== sqliteUpdatedAt) throw new Error("SQLite root exports do not match subpath exports");
 if (pgTableDefinition.id.getSQLType() !== "integer") throw new Error("PostgreSQL helper failed");
 if (pgTableDefinition.createdAt.getSQLType() !== "timestamp") throw new Error("PostgreSQL createdAt helper failed");
 if (pgTableDefinition.updatedAt.getSQLType() !== "timestamp") throw new Error("PostgreSQL updatedAt helper failed");
+if (pgTableDefinition.deletedAt.getSQLType() !== "timestamp" || pgTableDefinition.deletedAt.notNull || pgTableDefinition.deletedAt.hasDefault) throw new Error("pg deletedAt helper failed");
 if (sqliteTableDefinition.id.getSQLType() !== "text") throw new Error("SQLite helper failed");
 if (sqliteTableDefinition.createdAt.getSQLType() !== "text") throw new Error("SQLite createdAt helper failed");
 if (sqliteTableDefinition.updatedAt.getSQLType() !== "text") throw new Error("SQLite updatedAt helper failed");
+if (sqliteTableDefinition.deletedAt.getSQLType() !== "text" || sqliteTableDefinition.deletedAt.notNull || sqliteTableDefinition.deletedAt.hasDefault) throw new Error("sqlite deletedAt helper failed");
 if (typeof sqliteTableDefinition.id.defaultFn?.() !== "string") throw new Error("SQLite UUID default failed");
 `,
   );
