@@ -8,10 +8,10 @@ import { integer, uuid } from "drizzle-orm/pg-core";
 export default function id(strategy: "auto" | "uuid" = "auto") {
   switch (strategy) {
     case "auto":
-      return { id: integer().primaryKey().generatedAlwaysAsIdentity() };
+      return { id: integer("id").primaryKey().generatedAlwaysAsIdentity() };
     case "uuid":
       return {
-        id: uuid().primaryKey().defaultRandom(),
+        id: uuid("id").primaryKey().defaultRandom(),
       };
   }
 }

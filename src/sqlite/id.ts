@@ -8,10 +8,10 @@ import { integer, text } from "drizzle-orm/sqlite-core";
 export default function id(strategy: "auto" | "uuid" = "auto") {
   switch (strategy) {
     case "auto":
-      return { id: integer().primaryKey({ autoIncrement: true }) };
+      return { id: integer("id").primaryKey({ autoIncrement: true }) };
     case "uuid":
       return {
-        id: text()
+        id: text("id")
           .primaryKey()
           .$defaultFn(() => crypto.randomUUID()),
       };
