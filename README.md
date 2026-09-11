@@ -1,66 +1,100 @@
 # @setupless/drizzle
 
-Shared [Drizzle ORM](https://orm.drizzle.team/) schema helpers for Setupless packages.
+Setup less for your [Drizzle ORM](https://orm.drizzle.team/) schemas.
+Drop in IDs, timestamps, and soft-delete columns with a few spreads.
+
+## Install
+
+In your project that already uses Drizzle:
 
 ```sh
-npm install @setupless/drizzle drizzle-orm
-# or: bun add @setupless/drizzle drizzle-orm
+npm install @setupless/drizzle
+# or
+bun add @setupless/drizzle
 ```
 
-| Function       | Description                                     | Databases                 |
-| -------------- | ----------------------------------------------- | ------------------------- |
-| `id()`         | Auto-incrementing integer primary key           | PostgreSQL, SQLite, MySQL |
-| `id("uuid")`   | Generated UUID primary key                      | PostgreSQL, SQLite, MySQL |
-| `createdAt()`  | Timestamp with the current time as its default  | PostgreSQL, SQLite, MySQL |
-| `updatedAt()`  | Timestamp set on insert and Drizzle-run updates | PostgreSQL, SQLite, MySQL |
-| `deletedAt()`  | Nullable timestamp for soft deletion            | PostgreSQL, SQLite, MySQL |
-| `timestamps()` | `createdAt()` and `updatedAt()` columns         | PostgreSQL, SQLite, MySQL |
+## Add helpers to a schema
+
+A PostgreSQL schema using plain Drizzle:
 
 ```ts
-import { pgTable } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+
+export const users = pgTable("users", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => sql`now()`),
+  deletedAt: timestamp("deleted_at"),
+});
+```
+
+The same columns and runtime behaviour with helpers:
+
+```ts
+import { pgTable, text } from "drizzle-orm/pg-core";
 import { deletedAt, id, timestamps } from "@setupless/drizzle/pg";
 
 export const users = pgTable("users", {
   ...id(),
-  ...timestamps({ withTimezone: true }),
-  ...deletedAt({ withTimezone: true }),
-});
-```
-
-Import from `/sqlite` for SQLite or `/mysql` for MySQL. The package root also
-exports `pg`, `sqlite`, and `mysql` namespaces. `updatedAt()` uses Drizzle's `$onUpdate` callback; it does
-not create a database trigger for updates made outside Drizzle.
-
-`deletedAt()` adds a nullable `deleted_at` column with no default or automatic
-update. Set it when soft-deleting a row, and set it to `null` to restore the row.
-Queries must filter out soft-deleted rows explicitly.
-
-PostgreSQL timestamp helpers accept a `withTimezone` option. SQLite stores the
-timestamps as text and does not accept this option.
-
-MySQL helpers require MySQL 8.0.13+ and use `DATETIME(3)` with JavaScript `Date`
-values and millisecond precision. They do not accept `withTimezone`.
-`createdAt()` and `updatedAt()` default to `(utc_timestamp(3))`, and Drizzle
-updates use `utc_timestamp(3)`. These values stay in UTC regardless of the
-MySQL session timezone, matching Drizzle's UTC date mapping. Expression defaults
-require MySQL 8.0.13+ and a supporting storage engine such as InnoDB.
-
-`DATETIME` stores no timezone information. Pass JavaScript `Date` values through
-Drizzle when setting dates explicitly, including `deletedAt`. External writers
-must supply UTC values, for example with `UTC_TIMESTAMP(3)` rather than `NOW(3)`.
-
-```ts
-import { mysqlTable } from "drizzle-orm/mysql-core";
-import { deletedAt, id, timestamps } from "@setupless/drizzle/mysql";
-
-export const users = mysqlTable("users", {
-  ...id(),
+  name: text("name").notNull(),
   ...timestamps(),
   ...deletedAt(),
 });
 ```
 
-MySQL `id("uuid")` uses `CHAR(36)` and generates UUIDs in Drizzle through
-`$defaultFn`. Inserts outside Drizzle must supply their own UUID.
+Keep using properties such as `users.createdAt` in your queries. The database
+column names, defaults, and update behaviour are the same in both examples.
+If you add columns or change their definitions, apply those changes through your
+usual Drizzle migration workflow.
+
+Choose the import for your database. Keep your existing table definition and columns:
+
+| Database   | Import helpers from         |
+| ---------- | --------------------------- |
+| PostgreSQL | `@setupless/drizzle/pg`     |
+| SQLite     | `@setupless/drizzle/sqlite` |
+| MySQL      | `@setupless/drizzle/mysql`  |
+
+Use only the helpers you need. Already have an ID? Keep it. Already have
+`createdAt`? Add `...updatedAt()` instead of `...timestamps()` to avoid
+replacing its definition.
+
+## Helpers
+
+Each helper returns columns to spread into your table, using the same syntax as
+`...timestamps()` above.
+
+| Helper         | Adds                                                              |
+| -------------- | ----------------------------------------------------------------- |
+| `id()`         | An auto-incrementing integer primary key                          |
+| `id("uuid")`   | A generated UUID primary key                                      |
+| `createdAt()`  | A non-null `created_at` column, defaulting to the current time    |
+| `updatedAt()`  | A non-null `updated_at` column, set on insert and Drizzle updates |
+| `timestamps()` | Both `createdAt()` and `updatedAt()`                              |
+| `deletedAt()`  | A nullable `deleted_at` column for soft deletion                  |
+
+`updatedAt()` fills in the update time when you omit it from a Drizzle update.
+Explicit values take precedence. Updates outside Drizzle do not set it automatically.
+
+To soft-delete a row, set `deletedAt` to the deletion time. Set it to `null` to
+restore the row. Filter queries explicitly; the helper does not hide deleted rows.
+
+## Database differences
+
+- **PostgreSQL:** Pass
+  `{ withTimezone: true }` to `createdAt`, `updatedAt`, `timestamps`, or `deletedAt`
+  for `timestamp with time zone`. The default is `timestamp without time zone`.
+- **SQLite:** Timestamps are UTC text in `YYYY-MM-DD HH:MM:SS` format.
+- **MySQL:** Timestamps use UTC with millisecond precision. Requires MySQL
+  8.0.13+ and an engine that supports expression defaults, such as InnoDB.
+  Supply UTC dates when writing timestamps through raw SQL.
+
+PostgreSQL generates UUIDs in the database. SQLite and MySQL generate them in
+Drizzle, so inserts outside Drizzle must supply their own UUID.
 
 Licensed under [Apache 2.0](LICENSE).

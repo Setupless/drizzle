@@ -1,6 +1,6 @@
 {
   "name": "@setupless/drizzle",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Small, typed helpers for defining Drizzle ORM schemas",
   "homepage": "https://github.com/Setupless/drizzle#readme",
   "bugs": {
