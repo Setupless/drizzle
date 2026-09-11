@@ -1,9 +1,16 @@
 import { integer, text } from "drizzle-orm/sqlite-core";
 
 /**
- * Defines an `id` primary-key column.
+ * Defines an `id` primary key.
  *
- * Drizzle generates UUID values in the application through `$defaultFn`.
+ * `"auto"` uses an auto-incrementing integer. `"uuid"` stores UUIDs as text.
+ * Drizzle generates UUIDs through `$defaultFn` when the ID is omitted.
+ * Inserts outside Drizzle must supply their own UUID.
+ *
+ * @param strategy - ID generation strategy: `"auto"` or `"uuid"`. Defaults to
+ * `"auto"`.
+ *
+ * @returns An object containing `id` to spread into a `sqliteTable` definition.
  */
 export default function id(strategy: "auto" | "uuid" = "auto") {
   switch (strategy) {

@@ -1,9 +1,14 @@
 import { datetime } from "drizzle-orm/mysql-core";
 
 /**
- * Defines a nullable `deletedAt` DATETIME(3) column named `deleted_at` for soft deletion.
- * Has no default or automatic update. Set the timestamp when deleting a row.
- * Pass a JavaScript Date through Drizzle, or supply UTC values in raw SQL.
+ * Defines nullable `datetime(3)` column `deleted_at`.
+ *
+ * Has no default or automatic update. Set `deletedAt` to soft-delete a row,
+ * or `null` to restore it. Queries must filter out deleted rows explicitly.
+ * Pass a JavaScript `Date` through Drizzle, or supply UTC values in raw SQL.
+ *
+ * @returns An object containing `deletedAt` to spread into a `mysqlTable`
+ * definition.
  */
 export default function deletedAt() {
   return {
